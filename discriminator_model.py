@@ -11,8 +11,8 @@ class DownscaleBlock(nn.Module):
         self.bn1 = nn.BatchNorm2d(n)
         self.lrelu1 = nn.LeakyReLU(slope, inplace=True)
         
-        self.conv2 = conv3s(n, n, 1)
-        self.bn2 = nn.BatchNorm2d(n)
+        self.conv2 = conv3s(n, 2*n, 1)
+        self.bn2 = nn.BatchNorm2d(2*n)
         self.lrelu2 = nn.LeakyReLU(slope, inplace=True)
         
     def forward(self, x):
@@ -20,20 +20,25 @@ class DownscaleBlock(nn.Module):
         return self.lrelu2(self.bn2(self.conv2(x)))
 
 class DiscriminatorModel(nn.Module):
-    def __init__(self, n_in, n_out, n_hidden, n_downscale, slope):
+    def __init__(self, n_in, n_out, n_hidden, slope):
         super(DiscriminatorModel, self).__init()
         self.convi = conv3s(n_in, n_hidden, 1)
         self.lrelu1 = nn.LeakyReLU(slope, inplace=True)
         
         self.downscale = nn.Sequential(
-            *[DownscaleBlock(n_hidden) for _ in range(n_downscale)]
+            DownscaleBlock(n_hidden),
+            DownscaleBlock(2*n_hidden),
+            DownscaleBlock(4*n_hidden),
+            conv3s(8*n_hidden, 8*n_hidden, 2),
+            nn.BatchNorm2d(8*n_hidden),
+            nn.LeakyReLU(slope, inplace=True)
         )
         
         self.ampl = nn.AdaptiveMaxPool2d((4,4))
-        self.flatten = nn.Flatten()
-        self.dense1 = nn.Linear(n_hidden, n_hidden)
+        self.flatten = nn.Flatten(0)
+        self.dense1 = nn.Linear(128*n_hidden, 32*n_hidden)
         self.lrelu2 = nn.LeakyReLU(slope, inplace=True)
-        self.dense2 = nn.Linear(n_hidden, n_hidden)
+        self.dense2 = nn.Linear(32*n_hidden, 1)
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, x):

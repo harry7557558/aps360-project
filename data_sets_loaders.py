@@ -1,23 +1,35 @@
+from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.sampler import SubsetRandomSampler
+import os
+from os import listdir
+import numpy as np
+import PIL
+from PIL import Image
+
 class CombinedSRDataset(Dataset):
-  def __init__(self, lr_paths_dir, hr_paths_dir):
-    self.lr_paths_dir = lr_paths_dir
-    self.hr_paths_dir = hr_paths_dir
-    self.lr_images_names = sorted([s for s in lr_paths_dir])
-    self.hr_images_names = sorted([s for s in hr_paths_dir])
+  def __init__(self, lr_image_names, hr_image_names, isTrain=True, cropped_dir="./cropped_images"):
+    self.lr_image_names = lr_image_names
+    self.hr_image_names = hr_image_names
+    self.cropped_dir = cropped_dir
+    self.datasetType = "train" if isTrain else "test"
         
   def __getitem__(self, index):
-    lr_img = Image.open( self.lr_paths_dir + "/" + self.lr_images_names[index])
-    hr_img = Image.open( self.hr_paths_dir + "/" + self.hr_images_names[index])
-    return lr_img, hr_img
+    lr_img = Image.open("{}/{}/LR/".format(self.cropped_dir, self.datasetType) + self.lr_image_names[index])
+    hr_img = Image.open("{}/{}/HR/".format(self.cropped_dir, self.datasetType) + self.hr_image_names[index])
+    lr_img_arr = np.array(lr_img) / 255.0
+    hr_img_arr = np.array(hr_img) / 255.0
+    return (
+            np.transpose(lr_img_arr, (2, 0, 1)),
+            np.transpose(hr_img_arr, (2, 0, 1))
+        )
+
     
   def __len__(self):
-    return len(self.lr_paths_dir)
+    return len(self.lr_image_names)
 
-def get_train_val_test_dataloaders(batch_size):
-		train_set = CombinedSRDataset(
-    sorted(os.listdir("{}/{}/LR".format(CROPPED_DATASET_IMAGES_DIR, "train"))), sorted(os.listdir("{}/{}/HR".format(CROPPED_DATASET_IMAGES_DIR, "train"))))
-		test_set = CombinedSRDataset(
-		sorted(os.listdir("{}/{}/LR".format(CROPPED_DATASET_IMAGES_DIR, "test"))), sorted(os.listdir("{}/{}/HR".format(CROPPED_DATASET_IMAGES_DIR, "test"))))
+def get_train_val_test_dataloaders(batch_size, cropped_dir="./cropped_images"):
+		train_set = CombinedSRDataset(sorted(os.listdir("{}/{}/LR".format(cropped_dir, "train"))), sorted(os.listdir("{}/{}/HR".format(cropped_dir, "train"))))
+		test_set = CombinedSRDataset(sorted(os.listdir("{}/{}/LR".format(cropped_dir, "test"))), sorted(os.listdir("{}/{}/HR".format(cropped_dir, "test"))), isTrain=False)
 
 		# Create the training and validation indices to split the train_set
 		dataset_size = len(train_set)

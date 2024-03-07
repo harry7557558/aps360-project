@@ -1,4 +1,4 @@
-class MyDataset(Dataset):
+class CombinedSRDataset(Dataset):
   def __init__(self, lr_paths_dir, hr_paths_dir):
     self.lr_paths_dir = lr_paths_dir
     self.hr_paths_dir = hr_paths_dir
@@ -14,9 +14,9 @@ class MyDataset(Dataset):
     return len(self.lr_paths_dir)
 
 def get_train_val_test_dataloaders(batch_size):
-		train_set = MyDataset(
+		train_set = CombinedSRDataset(
     sorted(os.listdir("{}/{}/LR".format(CROPPED_DATASET_IMAGES_DIR, "train"))), sorted(os.listdir("{}/{}/HR".format(CROPPED_DATASET_IMAGES_DIR, "train"))))
-		test_set = MyDataset(
+		test_set = CombinedSRDataset(
 		sorted(os.listdir("{}/{}/LR".format(CROPPED_DATASET_IMAGES_DIR, "test"))), sorted(os.listdir("{}/{}/HR".format(CROPPED_DATASET_IMAGES_DIR, "test"))))
 
 		# Create the training and validation indices to split the train_set

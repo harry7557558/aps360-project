@@ -16,8 +16,8 @@ class CombinedSRDataset(Dataset):
   def __getitem__(self, index):
     lr_img = Image.open("{}/{}/LR/".format(self.cropped_dir, self.datasetType) + self.lr_image_names[index])
     hr_img = Image.open("{}/{}/HR/".format(self.cropped_dir, self.datasetType) + self.hr_image_names[index])
-    lr_img_arr = np.array(lr_img) / 255.0
-    hr_img_arr = np.array(hr_img) / 255.0
+    lr_img_arr = np.array(lr_img, dtype=np.float32) / 255.0
+    hr_img_arr = np.array(hr_img, dtype=np.float32) / 255.0
     return (
             np.transpose(lr_img_arr, (2, 0, 1)),
             np.transpose(hr_img_arr, (2, 0, 1))

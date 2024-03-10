@@ -59,7 +59,8 @@ class CombinedLoss(torch.nn.Module):
         # adversarial Loss
         if is_discriminator:
             return self.bce(discriminator_output, target)
-        loss_a = -torch.mean(discriminator_output)
+        # loss_a = -torch.mean(discriminator_output)
+        loss_a = self.bce(1.0-discriminator_output, torch.ones_like(discriminator_output))
 
         # pixel loss (L1+L2)
         loss_p2 = torch.mean((generated-target)**2) * normalize_l2

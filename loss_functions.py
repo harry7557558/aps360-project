@@ -85,9 +85,12 @@ class CombinedLoss(torch.nn.Module):
         loss_t = (0.5*(loss_t1+loss_t2))**0.5 * normalize_l2_vgg_gram
 
         # color correction loss
-        loss_cm = torch.mean(torch.mean(target-generated, axis=(2,3))**2) / normalize_l2
-        loss_cd = torch.mean((torch.std(target,axis=(2,3))-torch.std(generated,axis=(2,3)))**2) / normalize_l2
-        loss_c = loss_cm + loss_cd
+        output_size = (7, 7)  # non power of 2 to break tiles
+        generated_mapped = torch.nn.functional.interpolate(generated, output_size, mode="bilinear")
+        target_mapped = torch.nn.functional.interpolate(target, output_size, mode="bilinear")
+        loss_c_l2 = torch.mean((generated_mapped-target_mapped)**2) * normalize_l2
+        loss_c_l1 = torch.mean(torch.abs(generated_mapped-target_mapped))
+        loss_c = 0.5 * loss_c_l2 + 0.5 * loss_c_l1
 
         # composite loss
         total_loss = \
